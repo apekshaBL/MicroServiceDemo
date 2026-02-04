@@ -1,0 +1,22 @@
+package com.example.studentservice;
+
+import com.example.common.multitenancy.SchemaMultiTenantConnectionProvider;
+import com.example.common.multitenancy.TenantIdentifierResolver;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class HibernateConfig {
+
+    @Bean
+    public HibernatePropertiesCustomizer hibernatePropertiesCustomizer(
+            SchemaMultiTenantConnectionProvider connectionProvider,
+            TenantIdentifierResolver tenantResolver) {
+        return hibernateProperties -> {
+            // We pass the ACTUAL BEANS (which already have the DataSource) to Hibernate
+            hibernateProperties.put("hibernate.multi_tenant_connection_provider", connectionProvider);
+            hibernateProperties.put("hibernate.tenant_identifier_resolver", tenantResolver);
+        };
+    }
+}
