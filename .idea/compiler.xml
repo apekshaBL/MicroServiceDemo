@@ -9,6 +9,7 @@
         <module name="api-gateway" />
         <module name="student-service" />
         <module name="common-lib" />
+        <module name="payment-service" />
       </profile>
       <profile name="Annotation profile for user-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -19,7 +20,6 @@
         </processorPath>
         <module name="course-service" />
         <module name="user-service" />
-        <module name="payment-service" />
         <module name="notification-service" />
       </profile>
     </annotationProcessing>

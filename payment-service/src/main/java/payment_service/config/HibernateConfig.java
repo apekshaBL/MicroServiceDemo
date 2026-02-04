@@ -1,4 +1,4 @@
-package com.example.studentservice;
+package payment_service.config;
 
 import com.example.common.multitenancy.SchemaMultiTenantConnectionProvider;
 import com.example.common.multitenancy.TenantIdentifierResolver;
