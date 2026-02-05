@@ -28,6 +28,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
+<<<<<<< production-ready
 <<<<<<< HEAD
 			<artifactId>spring-boot-starter-flyway</artifactId>
 		</dependency>
@@ -41,6 +42,9 @@
 =======
 			<artifactId>spring-boot-starter-web</artifactId>
 >>>>>>> origin/main
+=======
+			<artifactId>spring-boot-starter-web</artifactId>
+>>>>>>> main
 		</dependency>
 
 		<dependency>

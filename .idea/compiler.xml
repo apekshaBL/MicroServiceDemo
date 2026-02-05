@@ -9,6 +9,7 @@
         <module name="api-gateway" />
         <module name="student-service" />
         <module name="common-lib" />
+        <module name="payment-service" />
       </profile>
       <profile name="Annotation profile for payment-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
