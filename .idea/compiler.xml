@@ -19,9 +19,13 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
         </processorPath>
         <module name="course-service" />
+ production-ready
         <module name="payment-service" />
         <module name="user-service" />
+
+main
         <module name="notification-service" />
+        <module name="user-service" />
       </profile>
     </annotationProcessing>
   </component>

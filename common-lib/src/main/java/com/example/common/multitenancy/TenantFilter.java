@@ -19,14 +19,14 @@ public class TenantFilter implements Filter {
         if (tenantId != null && !tenantId.isEmpty()) {
             TenantContext.setCurrentTenant(tenantId);
         } else {
-            // Default to 'public' schema if no header is sent
+
             TenantContext.setCurrentTenant("public");
         }
 
         try {
             chain.doFilter(request, response);
         } finally {
-            // Always clear the tenant after the request finishes to prevent memory leaks
+
             TenantContext.clear();
         }
     }
