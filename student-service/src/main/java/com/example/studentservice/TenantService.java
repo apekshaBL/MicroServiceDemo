@@ -24,13 +24,13 @@ public class TenantService {
 
     public void initDatabase(String tenantId) {
         try {
-            // 1. Create the Schema if it doesn't exist
+
             try (Connection connection = dataSource.getConnection();
                  Statement statement = connection.createStatement()) {
                 statement.execute("CREATE SCHEMA IF NOT EXISTS " + tenantId);
             }
 
-            // 2. Run Liquibase on that specific Schema
+
             try (Connection connection = dataSource.getConnection()) {
                 connection.setSchema(tenantId); // Switch to new schema
 
