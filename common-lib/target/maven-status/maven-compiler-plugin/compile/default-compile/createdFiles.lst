@@ -1,5 +1,6 @@
 com\example\common\multitenancy\TenantFilter.class
-com\example\common\multitenancy\SchemaMultiTenantConnectionProvider.class
 org\example\Main.class
-com\example\common\multitenancy\TenantIdentifierResolver.class
 com\example\common\multitenancy\TenantContext.class
+com\example\common\multitenancy\SchemaMultiTenantConnectionProvider.class
+com\example\common\multitenancy\security\JwtUtils.class
+com\example\common\multitenancy\TenantIdentifierResolver.class

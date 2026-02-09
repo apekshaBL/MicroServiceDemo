@@ -11,13 +11,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String username;
-    private String email;
-    private String role;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
     public Long getId() {
         return id;
     }
@@ -34,12 +27,12 @@ public class User {
         this.username = username;
     }
 
-    public String getEmail() {
-        return email;
+    public String getPassword() {
+        return password;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getRole() {
@@ -50,11 +43,11 @@ public class User {
         this.role = role;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    @Column(unique = true, nullable = false)
+    private String username;
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    @Column(nullable = false)
+    private String password;
+
+    private String role;
 }

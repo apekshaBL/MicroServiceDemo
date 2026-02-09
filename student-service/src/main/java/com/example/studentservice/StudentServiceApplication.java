@@ -2,9 +2,11 @@ package com.example.studentservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient; // <--- THIS WAS MISSING
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
+@EnableDiscoveryClient
 @ComponentScan(basePackages = {"com.example.studentservice", "com.example.common"})
 public class StudentServiceApplication {
     public static void main(String[] args) {
