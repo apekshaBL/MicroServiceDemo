@@ -1,8 +1,9 @@
 package payment_service.config;
 
+
 import com.example.common.multitenancy.SchemaMultiTenantConnectionProvider;
 import com.example.common.multitenancy.TenantIdentifierResolver;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
+import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
