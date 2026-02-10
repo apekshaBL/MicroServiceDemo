@@ -1,15 +1,37 @@
 package com.example.userservice.entity;
 
-import jakarta.persistence.*; // <--- CRITICAL: Imports all JPA annotations
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "app_users") // Matches the table we verified works
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String username;
+
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    @Column(nullable = false)
+    private String role; // Stores "ADMIN", "STUDENT", etc.
+
+    // Added fields from your friend's code
+ // Optional if Auth Service handles it
+    private boolean isActive = true;
+    private String resetToken;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     public Long getId() {
         return id;
@@ -27,12 +49,12 @@ public class User {
         this.username = username;
     }
 
-    public String getPassword() {
-        return password;
+    public String getEmail() {
+        return email;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getRole() {
@@ -43,11 +65,28 @@ public class User {
         this.role = role;
     }
 
-    @Column(unique = true, nullable = false)
-    private String username;
 
-    @Column(nullable = false)
-    private String password;
+    public boolean isActive() {
+        return isActive;
+    }
 
-    private String role;
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
+    public String getResetToken() {
+        return resetToken;
+    }
+
+    public void setResetToken(String resetToken) {
+        this.resetToken = resetToken;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }

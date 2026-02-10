@@ -30,37 +30,34 @@ public class SchemaMultiTenantConnectionProvider implements MultiTenantConnectio
     public Connection getConnection(String tenantIdentifier) throws SQLException {
         Connection connection = getAnyConnection();
         try {
-            // Switch to the specific tenant schema
-            connection.setSchema(tenantIdentifier);
+            String tenant = (tenantIdentifier != null) ? tenantIdentifier : "public";
+
+            // FIX HERE: Use raw SQL instead of connection.setSchema()
+            connection.createStatement().execute("SET search_path TO " + tenant);
+
         } catch (SQLException e) {
             throw new SQLException("Could not alter JDBC connection to specified schema [" + tenantIdentifier + "]", e);
         }
         return connection;
     }
-
     @Override
     public void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException {
         try {
-
-            connection.setSchema("public");
+            // Reset to public to avoid schema bleeding
+            connection.createStatement().execute("SET search_path TO public");
         } catch (SQLException e) {
-            throw new SQLException("Could not reset schema to public", e);
+            // Log but don't crash
+            System.err.println("Could not reset schema to public: " + e.getMessage());
         }
         connection.close();
     }
 
     @Override
-    public boolean supportsAggressiveRelease() {
-        return false;
-    }
+    public boolean supportsAggressiveRelease() { return false; }
 
     @Override
-    public boolean isUnwrappableAs(Class<?> unwrapType) {
-        return false;
-    }
+    public boolean isUnwrappableAs(Class<?> unwrapType) { return false; }
 
     @Override
-    public <T> T unwrap(Class<T> unwrapType) {
-        return null;
-    }
+    public <T> T unwrap(Class<T> unwrapType) { return null; }
 }

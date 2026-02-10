@@ -23,32 +23,29 @@ public class TenantService {
     }
 
     public void initDatabase(String tenantId) {
-        try {
-            // 1. Create Schema (Safe to run even if Student Service already created it)
-            try (Connection connection = dataSource.getConnection();
-                 Statement statement = connection.createStatement()) {
+        try (Connection connection = dataSource.getConnection()) {
+            // 1. Create Schema
+            try (Statement statement = connection.createStatement()) {
                 statement.execute("CREATE SCHEMA IF NOT EXISTS " + tenantId);
+                // THIS IS THE KEY FIX: Force the session to use the tenant schema
+                statement.execute("SET search_path TO " + tenantId);
             }
 
-            // 2. Run Liquibase to create 'users' table
-            try (Connection connection = dataSource.getConnection()) {
-                connection.setSchema(tenantId); // Switch to the tenant schema
+            // 2. Run Liquibase
+            Database database = DatabaseFactory.getInstance()
+                    .findCorrectDatabaseImplementation(new JdbcConnection(connection));
 
-                Database database = DatabaseFactory.getInstance()
-                        .findCorrectDatabaseImplementation(new JdbcConnection(connection));
+            database.setDefaultSchemaName(tenantId);
+            database.setLiquibaseSchemaName(tenantId); // Keep tracking tables inside the tenant schema
 
-                // Set default schema so Liquibase knows where to create tables
-                database.setDefaultSchemaName(tenantId);
+            Liquibase liquibase = new Liquibase(
+                    "db/changelog/db.changelog-master.xml",
+                    new ClassLoaderResourceAccessor(),
+                    database
+            );
 
-                Liquibase liquibase = new Liquibase(
-                        "db/changelog/db.changelog-master.xml",
-                        new ClassLoaderResourceAccessor(),
-                        database
-                );
-
-                liquibase.update(new Contexts(), new LabelExpression());
-                System.out.println(" User Service tables created for tenant: " + tenantId);
-            }
+            liquibase.update(new Contexts(), new LabelExpression());
+            System.out.println("User Service tables created for tenant: " + tenantId);
 
         } catch (Exception e) {
             throw new RuntimeException("Error initializing User DB for: " + tenantId, e);
