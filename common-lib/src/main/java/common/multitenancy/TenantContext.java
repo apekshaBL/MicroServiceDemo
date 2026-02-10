@@ -1,4 +1,4 @@
-package com.example.common.multitenancy;
+package common.multitenancy;
 
 public class TenantContext {
     private static final ThreadLocal<String> currentTenant = new ThreadLocal<>();

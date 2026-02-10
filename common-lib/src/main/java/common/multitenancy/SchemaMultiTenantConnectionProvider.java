@@ -1,4 +1,4 @@
-package com.example.common.multitenancy;
+package common.multitenancy;
 
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package com.example.common.multitenancy;
+package common.multitenancy;
 
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.springframework.stereotype.Component;

@@ -1,7 +1,7 @@
 package com.example.userservice.config;
 
-import com.example.common.multitenancy.SchemaMultiTenantConnectionProvider;
-import com.example.common.multitenancy.TenantIdentifierResolver;
+import common.multitenancy.SchemaMultiTenantConnectionProvider;
+import common.multitenancy.TenantIdentifierResolver;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
