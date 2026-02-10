@@ -4,7 +4,6 @@
     <artifactId>microservice-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-
     <modules>
         <module>common-lib</module>
         <module>student-service</module>
