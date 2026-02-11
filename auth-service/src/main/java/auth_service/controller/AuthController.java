@@ -21,13 +21,13 @@ public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    // 1. REGISTER (Public)
+
     @PostMapping("/register")
     public String addNewUser(@RequestBody UserCredential user) {
         return service.saveUser(user);
     }
 
-    // 2. LOGIN / GET TOKEN (Public)
+
     @PostMapping("/token")
     public String getToken(@RequestBody AuthRequest authRequest) {
         // This validates the user/password with the DB
@@ -43,7 +43,6 @@ public class AuthController {
         }
     }
 
-    // 3. VALIDATE TOKEN (Used by Gateway)
     @GetMapping("/validate")
     public String validateToken(@RequestParam("token") String token) {
         service.validateToken(token);
@@ -56,7 +55,6 @@ public class AuthController {
         return ResponseEntity.ok("Reset instructions sent to your email");
     }
 
-    // USE CASE: Reset Password
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestParam String token, @RequestBody String newPassword) {
         service.resetPassword(token, newPassword);

@@ -28,7 +28,7 @@ public class AuthConfig {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // 1. Allow Login & Register (CRITICAL)
-                        .requestMatchers("/auth/register", "/auth/token", "/auth/validate").permitAll()
+                        .requestMatchers("/auth/register", "/auth/token", "/auth/validate", "/auth/forgot-password", "/auth/reset-password").permitAll()
                         // 2. Allow Consul Health Checks (CRITICAL)
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/error").permitAll()

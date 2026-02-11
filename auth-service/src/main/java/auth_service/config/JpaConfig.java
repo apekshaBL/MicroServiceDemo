@@ -34,10 +34,9 @@ public class JpaConfig {
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(vendorAdapter);
 
-        // Feed Hibernate settings manually
         Map<String, Object> properties = new HashMap<>(jpaProperties.getProperties());
 
-        // CRITICAL FIX: Pass the ACTUAL BEANS, not the class names
+
         properties.put(Environment.MULTI_TENANT_CONNECTION_PROVIDER, multiTenantConnectionProvider);
         properties.put(Environment.MULTI_TENANT_IDENTIFIER_RESOLVER, tenantIdentifierResolver);
 
