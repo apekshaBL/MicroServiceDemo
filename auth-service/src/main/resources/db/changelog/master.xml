@@ -7,4 +7,10 @@
 
     <include file="db/changelog/changes/01-create-users-table.sql" relativeToChangelogFile="false"/>
 
+
+
+
+
+
+
 </databaseChangeLog>
