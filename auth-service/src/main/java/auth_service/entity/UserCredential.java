@@ -9,7 +9,7 @@ import lombok.AllArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "users",schema = "auth_schema") // Removed hardcoded schema to allow multi-tenancy
+@Table(name = "users") // Removed hardcoded schema to allow multi-tenancy
 public class UserCredential {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
