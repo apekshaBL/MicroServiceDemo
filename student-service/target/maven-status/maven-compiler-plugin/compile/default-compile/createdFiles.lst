@@ -1,0 +1,4 @@
+com/example/studentservice/TenantController.class
+com/example/studentservice/TenantService.class
+com/example/studentservice/HibernateConfig.class
+com/example/studentservice/StudentServiceApplication.class
