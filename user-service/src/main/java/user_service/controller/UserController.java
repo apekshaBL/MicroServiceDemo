@@ -7,7 +7,6 @@ import user_service.entity.UserEntity;
 import user_service.service.UserService;
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/users")
 public class UserController {

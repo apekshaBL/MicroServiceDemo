@@ -19,24 +19,41 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
     public static class Config {}
 
+
     @Override
     public GatewayFilter apply(Config config) {
         return ((exchange, chain) -> {
-            // 1. Check if Authorization header exists
+
+            String path = exchange.getRequest().getURI().getPath();
+
+            // ✅ Public endpoints (NO TOKEN REQUIRED)
+            if (path.contains("/auth/login") ||
+                    path.contains("/users/signup") ||
+                    path.contains("/users/signin-check") ||
+                    path.contains("/users/forgot-password") ||
+                    path.contains("/users/reset-password")) {
+
+                return chain.filter(exchange);
+            }
+
+            // 🔐 Protected endpoints
             if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
                 throw new RuntimeException("Missing Authorization Header");
             }
 
-            String authHeader = exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
+            String authHeader = exchange.getRequest()
+                    .getHeaders()
+                    .getFirst(HttpHeaders.AUTHORIZATION);
+
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 authHeader = authHeader.substring(7);
             }
 
             try {
-                // 2. Call Auth-Service to validate the token
-                // Note: "lb://auth-service" works because of Consul + LoadBalancer
-                template.getForObject("http://auth-service/auth/validate?token=" + authHeader, String.class);
-
+                template.getForObject(
+                        "http://auth-service/auth/validate?token=" + authHeader,
+                        String.class
+                );
             } catch (Exception e) {
                 throw new RuntimeException("Unauthorized access to application");
             }
@@ -44,4 +61,5 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             return chain.filter(exchange);
         });
     }
+
 }
