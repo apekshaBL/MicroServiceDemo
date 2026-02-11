@@ -1,6 +1,5 @@
 package auth_service.config;
-
-
+//
 import auth_service.entity.UserCredential;
 import auth_service.repository.UserCredentialRepository;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,8 +1,8 @@
 package auth_service.service;
-
-
+//
 import auth_service.entity.UserCredential;
 import auth_service.repository.UserCredentialRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -15,13 +15,37 @@ public class AuthService {
     private final UserCredentialRepository repository;
     private final PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtService jwtService;
+
     public AuthService(UserCredentialRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
     }
 
+
+    public String saveUser(UserCredential credential) {
+        credential.setPassword(passwordEncoder.encode(credential.getPassword()));
+        repository.save(credential);
+        return "user added to the system";
+    }
+
+    // Fixes: "cannot find symbol method generateToken"
+    public String generateToken(String username) {
+        // Fetch user to get their Tenant ID
+        UserCredential user = repository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Pass the tenantId to the JWT generator
+        return jwtService.generateToken(username, user.getTenantId());
+    }
+
+
+    public void validateToken(String token) {
+        jwtService.validateToken(token);
+    }
+
     public UserCredential createUser(UserCredential user) {
-        // Encrypting password before saving to the tenant-specific schema
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return repository.save(user);
     }
@@ -58,7 +82,6 @@ public class AuthService {
         String token = UUID.randomUUID().toString();
         user.setResetToken(token);
         repository.save(user);
-        // SRE Tip: Log the token generation for debugging until email service is integrated
         System.out.println("Generated Reset Token for " + email + ": " + token);
     }
 
@@ -72,7 +95,6 @@ public class AuthService {
 
     public void deleteUser(int id) {
         UserCredential user = getUserById(id);
-        // Implementing Soft Delete by flipping the isActive flag
         user.setActive(false);
         repository.save(user);
     }

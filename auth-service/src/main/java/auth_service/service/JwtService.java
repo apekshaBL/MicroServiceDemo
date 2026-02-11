@@ -1,32 +1,32 @@
 package auth_service.service;
 
-
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Component;
-
+import org.springframework.stereotype.Service;
+//
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
+@Service
 public class JwtService {
 
-    // Must be a 256-bit (32 character) base64 encoded string
     public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
 
     public void validateToken(final String token) {
-        // In JJWT 0.12.x, we use parser() instead of parserBuilder()
         Jwts.parser()
                 .verifyWith(getSignKey())
                 .build()
                 .parseSignedClaims(token);
     }
 
-    public String generateToken(String userName) {
+    public String generateToken(String userName, String tenantId) {
+
         Map<String, Object> claims = new HashMap<>();
+        claims.put("tenantId", tenantId);
+
         return createToken(claims, userName);
     }
 
@@ -36,7 +36,7 @@ public class JwtService {
                 .subject(userName)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30)) // 30 mins
-                .signWith(getSignKey()) // Algorithm is auto-detected from key type
+                .signWith(getSignKey(), Jwts.SIG.HS256)
                 .compact();
     }
 

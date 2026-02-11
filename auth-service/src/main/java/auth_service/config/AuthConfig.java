@@ -13,8 +13,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
-
+//
 @Configuration
 @EnableWebSecurity
 public class AuthConfig {
@@ -28,7 +27,12 @@ public class AuthConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // 1. Allow Login & Register (CRITICAL)
                         .requestMatchers("/auth/register", "/auth/token", "/auth/validate").permitAll()
+                        // 2. Allow Consul Health Checks (CRITICAL)
+                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        // 3. Block everything else
                         .anyRequest().authenticated()
                 )
                 .build();

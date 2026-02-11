@@ -1,7 +1,5 @@
 package auth_service.common.context;
-
-
-
+//
 public class TenantContext {
     private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();
 
