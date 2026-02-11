@@ -4,6 +4,7 @@ import auth_service.dto.AuthRequest;
 import auth_service.entity.UserCredential;
 import auth_service.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -46,5 +47,18 @@ public class AuthController {
     public String validateToken(@RequestParam("token") String token) {
         service.validateToken(token);
         return "Token is valid";
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
+        service.initiatePasswordReset(email);
+        return ResponseEntity.ok("Reset instructions sent to your email");
+    }
+
+    // USE CASE: Reset Password
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestParam String token, @RequestBody String newPassword) {
+        service.resetPassword(token, newPassword);
+        return ResponseEntity.ok("Password has been reset successfully");
     }
 }

@@ -45,9 +45,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                     .retrieve()
                     .bodyToMono(String.class)
                     .flatMap(response -> {
-                        // VALIDATION SUCCESSFUL - NOW EXTRACT DATA
 
-                        // A. Extract Tenant ID and User ID (Username) from the token payload
                         String tenantId = extractClaim(token, "tenantId");
                         String userId = extractClaim(token, "sub"); // "sub" holds the username in your JWT
 
@@ -74,7 +72,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
     private String extractClaim(String token, String claimKey) {
         try {
-            // JWT format: Header.Payload.Signature
+
             String[] chunks = token.split("\\.");
             if (chunks.length < 2) return null;
 
