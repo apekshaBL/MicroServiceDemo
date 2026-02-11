@@ -11,14 +11,6 @@
                  splitStatements="true"
                  stripComments="true"/>
     </changeSet>
-    <changeSet id="002-add-phone-number" author="kunal">
-        <sqlFile path="db/changelog/002_add_phone.sql"
-                 relativeToChangelogFile="false"
-                 splitStatements="true"
-                 stripComments="true"/>
-    </changeSet>
-    <changeSet id="003-add-password" author="kunal">
-        <sqlFile path="db/changelog/003_add_password.sql" relativeToChangelogFile="false"/>
-    </changeSet>
+
 
 </databaseChangeLog>

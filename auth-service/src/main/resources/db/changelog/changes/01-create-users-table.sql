@@ -1,6 +1,3 @@
--- Liquibase formatted SQL
--- changeset author:auth_service_dev id:1
-
 CREATE TABLE IF NOT EXISTS users (
                                      id BIGSERIAL PRIMARY KEY,
                                      username VARCHAR(50) NOT NULL,
