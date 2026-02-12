@@ -34,15 +34,15 @@ public class UserCredential {
     @Column(name="password")
     private String password; // BCrypt hashed
 
-    // Added for Role-Based Access use case
+
     @Column(name="role_name")
     private String roleName = "ROLE_USER";
 
-    // Added for Soft Delete use case
+
     @Column(name="is_active")
     private boolean isActive = true;
 
-    // Added for Forgot Password use case
+
     @Column(name = "reset_token")
     private String resetToken;
 

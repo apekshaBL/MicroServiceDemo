@@ -1,6 +1,5 @@
 package auth_service.controller;
-
-//
+import auth_service.common.context.TenantContext;
 import auth_service.dto.AuthRequest;
 import auth_service.entity.UserCredential;
 import auth_service.service.AuthService;
@@ -21,25 +20,39 @@ public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-
     @PostMapping("/register")
     public String addNewUser(@RequestBody UserCredential user) {
-        return service.saveUser(user);
-    }
+        // Default to 'public' if no tenant provided
+        String tenant = (user.getTenantId() != null) ? user.getTenantId() : "public";
 
+        TenantContext.setCurrentTenant(tenant);
+        try {
+            return service.saveUser(user);
+        } finally {
+            TenantContext.clear();
+        }
+    }
 
     @PostMapping("/token")
     public String getToken(@RequestBody AuthRequest authRequest) {
-        // This validates the user/password with the DB
-        Authentication authenticate = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
-        );
+        String tenant = (authRequest.getTenantId() != null) ? authRequest.getTenantId() : "public";
 
-        if (authenticate.isAuthenticated()) {
-            // If valid, generate the JWT
-            return service.generateToken(authRequest.getUsername());
-        } else {
-            throw new RuntimeException("invalid access");
+        // This tells Hibernate to look in the specific schema
+        TenantContext.setCurrentTenant(tenant);
+
+        try {
+            Authentication authenticate = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+            );
+
+            if (authenticate.isAuthenticated()) {
+                return service.generateToken(authRequest.getUsername(), tenant);
+            } else {
+                throw new RuntimeException("Invalid Access");
+            }
+        } finally {
+            // Cleanup to prevent memory leaks
+            TenantContext.clear();
         }
     }
 
@@ -50,14 +63,27 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
-        service.initiatePasswordReset(email);
-        return ResponseEntity.ok("Reset instructions sent to your email");
+    public ResponseEntity<String> forgotPassword(@RequestParam String email,
+                                                 @RequestParam(required = false, defaultValue = "public") String tenantId) {
+        TenantContext.setCurrentTenant(tenantId);
+        try {
+            service.initiatePasswordReset(email);
+            return ResponseEntity.ok("Reset instructions sent to your email");
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestParam String token, @RequestBody String newPassword) {
-        service.resetPassword(token, newPassword);
-        return ResponseEntity.ok("Password has been reset successfully");
+    public ResponseEntity<String> resetPassword(@RequestParam String token,
+                                                @RequestBody String newPassword,
+                                                @RequestParam(required = false, defaultValue = "public") String tenantId) {
+        TenantContext.setCurrentTenant(tenantId);
+        try {
+            service.resetPassword(token, newPassword);
+            return ResponseEntity.ok("Password has been reset successfully");
+        } finally {
+            TenantContext.clear();
+        }
     }
 }

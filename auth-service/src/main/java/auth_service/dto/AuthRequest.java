@@ -12,6 +12,16 @@ public class AuthRequest {
     private String username;
     private String password;
 
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    private String tenantId;
+
     public String getUsername() {
         return username;
     }

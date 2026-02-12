@@ -1,7 +1,8 @@
 package auth_service.service;
-//
+
 import auth_service.entity.UserCredential;
 import auth_service.repository.UserCredentialRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class AuthService {
 
     private final UserCredentialRepository repository;
@@ -23,23 +25,16 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    public String generateToken(String username, String tenantId) {
+        // Pass both username and tenantId to the JWT generator
+        return jwtService.generateToken(username, tenantId);
+    }
 
     public String saveUser(UserCredential credential) {
         credential.setPassword(passwordEncoder.encode(credential.getPassword()));
         repository.save(credential);
         return "user added to the system";
     }
-
-    // Fixes: "cannot find symbol method generateToken"
-    public String generateToken(String username) {
-        // Fetch user to get their Tenant ID
-        UserCredential user = repository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Pass the tenantId to the JWT generator
-        return jwtService.generateToken(username, user.getTenantId());
-    }
-
 
     public void validateToken(String token) {
         jwtService.validateToken(token);
@@ -82,7 +77,6 @@ public class AuthService {
         String token = UUID.randomUUID().toString();
         user.setResetToken(token);
         repository.save(user);
-        System.out.println("Generated Reset Token for " + email + ": " + token);
     }
 
     public void resetPassword(String token, String newPassword) {
