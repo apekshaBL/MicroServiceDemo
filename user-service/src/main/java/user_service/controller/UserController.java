@@ -15,32 +15,30 @@ public class UserController {
     private final UserService service;
     public UserController(UserService service) { this.service = service; }
 
-    // USE CASE: Get Profile by ID
     @GetMapping("/profile/{id}")
     public ResponseEntity<UserEntity> getProfile(@PathVariable Long id) {
         return ResponseEntity.ok(service.getUserById(id));
     }
 
-    // USE CASE: Update Profile (User Edit)
     @PutMapping("/profile/{id}")
     public ResponseEntity<UserEntity> updateProfile(@PathVariable Long id, @RequestBody UserEntity user) {
         return ResponseEntity.ok(service.updateUser(id, user));
     }
 
-    // USE CASE: Role-Based Access (Fetch only specific roles)
+
     @GetMapping("/role/{roleName}")
     public List<UserEntity> getUsersByRole(@PathVariable String roleName) {
         return service.searchByRole(roleName);
     }
 
-    // USE CASE: Delete Profile
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProfile(@PathVariable Long id) {
         service.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 
-    // Admin Utility: Create user directly if needed
+
     @PostMapping
     public ResponseEntity<UserEntity> createProfile(@RequestBody UserEntity user) {
         return new ResponseEntity<>(service.createUser(user), HttpStatus.CREATED);

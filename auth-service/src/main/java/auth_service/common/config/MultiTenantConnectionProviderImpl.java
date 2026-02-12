@@ -22,6 +22,7 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
         if (dataSource == null) {
             throw new SQLException("DataSource has not been initialized yet!");
         }
+
         return dataSource.getConnection();
     }
 
