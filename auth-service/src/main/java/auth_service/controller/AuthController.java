@@ -62,9 +62,11 @@ public class AuthController {
         return "Token is valid";
     }
 
+
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestParam String email,
-                                                 @RequestParam(required = false, defaultValue = "public") String tenantId) {
+                                                 @RequestParam String tenantId) {
+
         TenantContext.setCurrentTenant(tenantId);
         try {
             service.initiatePasswordReset(email);
@@ -77,7 +79,8 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestParam String token,
                                                 @RequestBody String newPassword,
-                                                @RequestParam(required = false, defaultValue = "public") String tenantId) {
+                                                @RequestParam String tenantId) {
+
         TenantContext.setCurrentTenant(tenantId);
         try {
             service.resetPassword(token, newPassword);

@@ -1,6 +1,4 @@
-package com.example.userservice;
-
-
+package user_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,9 +6,8 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @ComponentScan(basePackages = {
-		"com.example.userservice", // Scans your controllers and services
-		"common.multitenancy",     // Scans the MultiTenantConnectionProvider in common-lib
-		"common.config"            // Scans any other common configs
+		"user_service",        // Scans your controllers, Interceptors, and SecurityConfig
+		"common.multitenancy"  // Scans the shared multitenancy logic from common-lib
 })
 public class UserServiceApplication {
 	public static void main(String[] args) {
