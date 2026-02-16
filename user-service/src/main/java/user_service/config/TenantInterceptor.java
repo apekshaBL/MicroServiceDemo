@@ -1,7 +1,5 @@
 package user_service.config;
 
-
-import auth_service.common.context.TenantContext; // Using common-lib
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
@@ -11,9 +9,10 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class TenantInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        // Catch the header sent by the Gateway
-        String tenantId = request.getHeader("X-Tenant-ID");
-        TenantContext.setCurrentTenant(tenantId != null ? tenantId : "public");
+        String tenant = request.getHeader("X-Tenant-Id"); // Or X-User-Id
+        if (tenant != null) {
+            TenantContext.setTenantId(tenant);
+        }
         return true;
     }
 
