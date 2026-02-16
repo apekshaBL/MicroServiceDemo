@@ -1,17 +1,18 @@
-package user_service.config;
+package user_service.common.interceptor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+import user_service.common.context.TenantContext;
 
 @Component
 public class TenantInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        String tenant = request.getHeader("X-Tenant-Id"); // Or X-User-Id
-        if (tenant != null) {
-            TenantContext.setTenantId(tenant);
+        String tenantId = request.getHeader("X-Tenant-ID");
+        if (tenantId != null && !tenantId.isEmpty()) {
+            TenantContext.setTenantId(tenantId);
         }
         return true;
     }
