@@ -2,9 +2,7 @@ package notification_service.controller;
 
 
 import notification_service.dto.EmailRequest;
-import notification_service.entity.Notification;
 import notification_service.service.EmailService;
-import notification_service.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

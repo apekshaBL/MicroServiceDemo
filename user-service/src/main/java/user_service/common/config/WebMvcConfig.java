@@ -1,9 +1,11 @@
-package user_service.config;
+package user_service.common.config;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import user_service.common.interceptor.TenantInterceptor;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {

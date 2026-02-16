@@ -1,15 +1,14 @@
-package user_service.config;
+package user_service.common.config;
 
+import auth_service.common.context.TenantContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.springframework.stereotype.Component;
-
+//
 @Component
-public class SchemaIdentifierResolver implements CurrentTenantIdentifierResolver {
-
+public class TenantIdentifierResolver implements CurrentTenantIdentifierResolver {
     @Override
     public String resolveCurrentTenantIdentifier() {
-        String tenantId = TenantContext.getTenantId();
-        return (tenantId != null) ? tenantId : "public"; // default schema
+        return TenantContext.getCurrentTenant();
     }
 
     @Override

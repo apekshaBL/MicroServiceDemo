@@ -1,4 +1,6 @@
-package user_service.config;
+package user_service.common.context;
+
+
 
 public class TenantContext {
     private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();
