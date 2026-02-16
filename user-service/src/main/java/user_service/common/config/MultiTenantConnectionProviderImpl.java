@@ -9,13 +9,13 @@ import java.sql.SQLException;
 @Component
 public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionProvider<Object> {
 
+    // Hibernate needs this empty constructor to start up
+    public MultiTenantConnectionProviderImpl() {}
+
     @Override
     public Connection getAnyConnection() throws SQLException {
-        // Fetch the DataSource from the static holder
+        // We use the holder to get the bean since Hibernate creates this class manually
         DataSource dataSource = ApplicationContextHolder.getBean(DataSource.class);
-        if (dataSource == null) {
-            throw new SQLException("DataSource not yet available in ApplicationContext");
-        }
         return dataSource.getConnection();
     }
 
@@ -28,6 +28,7 @@ public class MultiTenantConnectionProviderImpl implements MultiTenantConnectionP
     public Connection getConnection(Object tenantIdentifier) throws SQLException {
         Connection connection = getAnyConnection();
         String tenantId = (tenantIdentifier != null) ? tenantIdentifier.toString() : "public";
+        // This command physically switches the DB schema for the current request
         connection.createStatement().execute("SET search_path TO " + tenantId);
         return connection;
     }
