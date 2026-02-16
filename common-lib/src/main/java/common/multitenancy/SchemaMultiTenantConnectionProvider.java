@@ -30,8 +30,8 @@ public class SchemaMultiTenantConnectionProvider implements MultiTenantConnectio
     public Connection getConnection(String tenantIdentifier) throws SQLException {
         Connection connection = getAnyConnection();
         try {
-            // Switch to the specific tenant schema
-            connection.setSchema(tenantIdentifier);
+            // PostgreSQL specific: Using search_path is more reliable than setSchema
+            connection.createStatement().execute("SET search_path TO " + tenantIdentifier);
         } catch (SQLException e) {
             throw new SQLException("Could not alter JDBC connection to specified schema [" + tenantIdentifier + "]", e);
         }
@@ -41,12 +41,11 @@ public class SchemaMultiTenantConnectionProvider implements MultiTenantConnectio
     @Override
     public void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException {
         try {
-
-            connection.setSchema("public");
+            connection.createStatement().execute("SET search_path TO public");
         } catch (SQLException e) {
             throw new SQLException("Could not reset schema to public", e);
         }
-        connection.close();
+        releaseAnyConnection(connection);
     }
 
     @Override

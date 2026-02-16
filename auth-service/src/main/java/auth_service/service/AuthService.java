@@ -70,6 +70,13 @@ public class AuthService {
                 .filter(user -> user.getRoleName().equalsIgnoreCase(roleName))
                 .collect(Collectors.toList());
     }
+    public void resetPassword(String token, String newPassword) {
+        UserCredential user = repository.findByResetToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid reset token"));
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        repository.save(user);
+    }
 
     public void initiatePasswordReset(String email) {
         UserCredential user = repository.findByEmail(email)
@@ -77,14 +84,7 @@ public class AuthService {
         String token = UUID.randomUUID().toString();
         user.setResetToken(token);
         repository.save(user);
-    }
-
-    public void resetPassword(String token, String newPassword) {
-        UserCredential user = repository.findByResetToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid reset token"));
-        user.setPassword(passwordEncoder.encode(newPassword));
-        user.setResetToken(null);
-        repository.save(user);
+        System.out.println("DEBUG TOKEN: " + token);
     }
 
     public void deleteUser(int id) {
