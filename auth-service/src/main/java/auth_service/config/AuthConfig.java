@@ -28,7 +28,7 @@ public class AuthConfig {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers("/auth/register", "/auth/token", "/auth/validate", "/auth/forgot-password", "/auth/reset-password").permitAll()
+                        .requestMatchers("/auth/register", "/auth/token", "/auth/validate", "/auth/forgot-password", "/auth/reset-password" , "/auth/send-otp" , "/auth/simulate-hack").permitAll()
 
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/error").permitAll()

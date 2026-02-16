@@ -1,5 +1,4 @@
 package auth_service.service;
-
 import auth_service.dto.EmailRequest;
 import auth_service.entity.UserCredential;
 import auth_service.repository.UserCredentialRepository;
@@ -7,6 +6,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -88,20 +89,16 @@ public class AuthService {
                 .collect(Collectors.toList());
     }
 
-    // --- FIXED METHOD HERE ---
     public void initiatePasswordReset(String email) {
-        // 1. Find User (You were missing this!)
         UserCredential user = repository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email not registered"));
 
-        // 2. Generate Token (You were missing this!)
         String token = UUID.randomUUID().toString();
         user.setResetToken(token);
         repository.save(user);
 
         System.out.println("DEBUG TOKEN: " + token);
 
-        // 3. Send Email
         try {
             String resetLink = "http://localhost:8080/reset?token=" + token;
             EmailRequest emailReq = new EmailRequest();
@@ -124,7 +121,6 @@ public class AuthService {
         user.setResetToken(null);
         repository.save(user);
 
-        // --- EMAIL TRIGGER ---
         try {
             EmailRequest email = new EmailRequest();
             email.setTo(user.getEmail());
@@ -142,5 +138,55 @@ public class AuthService {
         UserCredential user = getUserById(id);
         user.setActive(false);
         repository.save(user);
+    }
+
+    public void loginFailed(String email) {
+        UserCredential user = repository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        int failedAttempts = 5;
+
+        if (failedAttempts >= 5) {
+            user.setActive(false); // Lock the account
+            repository.save(user);
+
+            // --- TRIGGER LOCK NOTIFICATION ---
+            try {
+                EmailRequest emailReq = new EmailRequest();
+                emailReq.setTo(user.getEmail());
+                emailReq.setSubject("🚨 Security Alert: Account Locked");
+                emailReq.setBody("Hello " + user.getUsername() + ",\n\nYour account has been locked due to 5 failed login attempts.\n\nIf this was you, contact support.");
+                emailReq.setTenantId(user.getTenantId());
+
+                notificationClient.sendEmail(emailReq);
+            } catch (Exception e) {
+                System.err.println("⚠️ Notification Service Down");
+            }
+        }
+    } // <--- !!! THIS WAS MISSING !!!
+
+    public void generateAndSendOTP(String email) {
+        UserCredential user = repository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        SecureRandom random = new SecureRandom();
+        int otpCode = 100000 + random.nextInt(900000);
+
+        user.setResetToken(String.valueOf(otpCode));
+        repository.save(user);
+
+        System.out.println("DEBUG OTP: " + otpCode);
+
+        try {
+            EmailRequest emailReq = new EmailRequest();
+            emailReq.setTo(user.getEmail());
+            emailReq.setSubject("Your Secure Login Code");
+            emailReq.setBody("Hello " + user.getUsername() + ",\n\nYour One-Time Password (OTP) is: " + otpCode + "\n\nThis code expires in 5 minutes.");
+            emailReq.setTenantId(user.getTenantId());
+
+            notificationClient.sendEmail(emailReq);
+        } catch (Exception e) {
+            System.err.println("⚠️ Notification Service Down: " + e.getMessage());
+        }
     }
 }
