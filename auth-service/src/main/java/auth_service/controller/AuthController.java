@@ -89,4 +89,31 @@ public class AuthController {
             TenantContext.clear();
         }
     }
+
+    @PostMapping("/send-otp")
+    public String sendOtp(@RequestParam String email, @RequestParam String tenantId) {
+        // !!! YOU MUST HAVE THESE LINES !!!
+        TenantContext.setCurrentTenant(tenantId);
+        System.out.println("DEBUG: Received Request -> Email: " + email + ", Tenant: " + tenantId);
+
+
+        try {
+            service.generateAndSendOTP(email);
+            return "OTP sent to your email";
+        } finally {
+            auth_service.common.context.TenantContext.clear();
+        }
+    }
+
+    @PostMapping("/simulate-hack")
+    public String simulateHack(@RequestParam String email, @RequestParam String tenantId) {
+
+        TenantContext.setCurrentTenant(tenantId);
+        try {
+            service.loginFailed(email);
+            return "Account locked and owner notified";
+        } finally {
+            TenantContext.clear();
+        }
+    }
 }
