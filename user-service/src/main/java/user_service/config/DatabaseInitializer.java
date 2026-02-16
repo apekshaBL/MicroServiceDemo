@@ -19,7 +19,7 @@ import java.util.List;
 public class DatabaseInitializer implements CommandLineRunner {
 
     private final DataSource dataSource;
-
+    // Ensure these names match what you expect in your multi-tenant setup
     private final List<String> defaultTenants = List.of("public", "engineering", "physics", "biology");
 
     public DatabaseInitializer(DataSource dataSource) {
@@ -28,43 +28,38 @@ public class DatabaseInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("STARTING AUTOMATIC DATABASE MIGRATION...");
-
         for (String tenant : defaultTenants) {
-
             try (Connection connection = dataSource.getConnection()) {
 
-                System.out.println("🛠️ Processing Tenant: " + tenant);
-
-
                 try (Statement statement = connection.createStatement()) {
+                    // 1. Create schema if it doesn't exist
                     statement.execute("CREATE SCHEMA IF NOT EXISTS " + tenant);
+                    // 2. IMPORTANT: Set search path so Liquibase creates the 'databasechangelog'
+                    // tables INSIDE the tenant schema, not in public.
+                    statement.execute("SET search_path TO " + tenant);
                 }
-
-
-                connection.setSchema(tenant);
 
                 Database database = DatabaseFactory.getInstance()
                         .findCorrectDatabaseImplementation(new JdbcConnection(connection));
 
+                // Tell Liquibase where to look/write
                 database.setDefaultSchemaName(tenant);
                 database.setLiquibaseSchemaName(tenant);
 
                 Liquibase liquibase = new Liquibase(
-                        "db/changelog/user-master.xml", // Changed from master.xml
+                        "db/changelog/user-master.xml", // Check if this name is correct for user-service
                         new ClassLoaderResourceAccessor(),
                         database
                 );
+                liquibase.clearCheckSums();
 
                 liquibase.update(new Contexts(), new LabelExpression());
-                System.out.println("✅ Tenant '" + tenant + "' is ready!");
+                System.out.println("✅ Schema '" + tenant + "' updated with user-service tables.");
 
             } catch (Exception e) {
-                System.err.println(" Error migrating tenant: " + tenant);
+                System.err.println("❌ Failed to migrate tenant: " + tenant);
                 e.printStackTrace();
-
             }
         }
-        System.out.println(" ALL DATABASES MIGRATED SUCCESSFULLY!");
     }
 }
