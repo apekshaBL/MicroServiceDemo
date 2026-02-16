@@ -11,6 +11,9 @@ import java.sql.SQLException;
 public class SchemaMultiTenantConnectionProvider implements MultiTenantConnectionProvider<String> {
 
     private final DataSource dataSource;
+    public SchemaMultiTenantConnectionProvider() {
+        this.dataSource = null;
+    }
 
     public SchemaMultiTenantConnectionProvider(DataSource dataSource) {
         this.dataSource = dataSource;
