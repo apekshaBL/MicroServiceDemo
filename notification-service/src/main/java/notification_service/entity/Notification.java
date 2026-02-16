@@ -15,7 +15,7 @@ public class Notification {
 
     public String getStatus() {
         return status;
-    }
+    }    //  shows status
 
     public void setStatus(String status) {
         this.status = status;

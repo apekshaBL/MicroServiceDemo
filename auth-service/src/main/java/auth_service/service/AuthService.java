@@ -1,5 +1,6 @@
 package auth_service.service;
 
+import auth_service.dto.EmailRequest;
 import auth_service.entity.UserCredential;
 import auth_service.repository.UserCredentialRepository;
 import jakarta.transaction.Transactional;
@@ -18,6 +19,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
+    private NotificationClient notificationClient;
+
+    @Autowired
     private JwtService jwtService;
 
     public AuthService(UserCredentialRepository repository, PasswordEncoder passwordEncoder) {
@@ -26,13 +30,26 @@ public class AuthService {
     }
 
     public String generateToken(String username, String tenantId) {
-        // Pass both username and tenantId to the JWT generator
         return jwtService.generateToken(username, tenantId);
     }
 
-    public String saveUser(UserCredential credential) {
-        credential.setPassword(passwordEncoder.encode(credential.getPassword()));
-        repository.save(credential);
+    public String saveUser(UserCredential user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        repository.save(user);
+
+        // --- EMAIL TRIGGER ---
+        try {
+            EmailRequest email = new EmailRequest();
+            email.setTo(user.getEmail());
+            email.setSubject("Welcome to " + user.getTenantId() + "!");
+            email.setBody("Hello " + user.getUsername() + ",\n\nYour account has been successfully created.\n\nTenant: " + user.getTenantId());
+            email.setTenantId(user.getTenantId());
+
+            notificationClient.sendEmail(email);
+        } catch (Exception e) {
+            System.err.println(" Notification Service Down: " + e.getMessage());
+        }
+
         return "user added to the system";
     }
 
@@ -70,21 +87,55 @@ public class AuthService {
                 .filter(user -> user.getRoleName().equalsIgnoreCase(roleName))
                 .collect(Collectors.toList());
     }
-    public void resetPassword(String token, String newPassword) {
-        UserCredential user = repository.findByResetToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid reset token"));
-        user.setPassword(passwordEncoder.encode(newPassword));
-        user.setResetToken(null);
-        repository.save(user);
-    }
 
+    // --- FIXED METHOD HERE ---
     public void initiatePasswordReset(String email) {
+        // 1. Find User (You were missing this!)
         UserCredential user = repository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email not registered"));
+
+        // 2. Generate Token (You were missing this!)
         String token = UUID.randomUUID().toString();
         user.setResetToken(token);
         repository.save(user);
+
         System.out.println("DEBUG TOKEN: " + token);
+
+        // 3. Send Email
+        try {
+            String resetLink = "http://localhost:8080/reset?token=" + token;
+            EmailRequest emailReq = new EmailRequest();
+            emailReq.setTo(user.getEmail());
+            emailReq.setSubject("Reset Password");
+            emailReq.setBody("Click here: " + resetLink);
+            emailReq.setTenantId(user.getTenantId());
+
+            notificationClient.sendEmail(emailReq);
+        } catch (Exception e) {
+            System.err.println("⚠️ Notification Service Down");
+        }
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        UserCredential user = repository.findByResetToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid reset token"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        repository.save(user);
+
+        // --- EMAIL TRIGGER ---
+        try {
+            EmailRequest email = new EmailRequest();
+            email.setTo(user.getEmail());
+            email.setSubject("Security Alert: Password Changed");
+            email.setBody("Hello " + user.getUsername() + ",\n\nYour password was successfully changed just now.\nIf this wasn't you, contact support immediately.");
+            email.setTenantId(user.getTenantId());
+
+            notificationClient.sendEmail(email);
+        } catch (Exception e) {
+            System.err.println(" Notification Service Down");
+        }
     }
 
     public void deleteUser(int id) {
