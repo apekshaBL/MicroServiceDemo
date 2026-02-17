@@ -30,27 +30,30 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // --- MERGED METHOD START ---
     public String generateToken(String username, String tenantId) {
         UserCredential user = repository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-
+        // 1. YOUR LOGIC: Security Check
         if (!user.isActive()) {
             throw new RuntimeException("Account is Locked. Contact Admin.");
         }
 
+        // 2. YOUR LOGIC: Reset Counter on Success
         if (user.getFailedAttempts() > 0) {
             user.setFailedAttempts(0);
             repository.save(user); // Reset to 0
         }
 
+        // 3. HER LOGIC: Pass Role to JWT
         return jwtService.generateToken(username, tenantId, user.getRoleName());
     }
+    // --- MERGED METHOD END ---
 
     public String saveUser(UserCredential user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         repository.save(user);
-
 
         try {
             EmailRequest email = new EmailRequest();
