@@ -23,10 +23,13 @@ public class JwtService {
                 .parseSignedClaims(token);
     }
 
-    public String generateToken(String userName, String tenantId) {
+
+    // 1. Update signature to accept 'role'
+    public String generateToken(String userName, String tenantId, String role) {
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("tenantId", tenantId);
+        claims.put("role", role); // 2. Add role to claims
 
         return createToken(claims, userName);
     }
@@ -41,7 +44,7 @@ public class JwtService {
                 .compact();
     }
 
-    private SecretKey getSignKey() {
+    public SecretKey getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);
     }

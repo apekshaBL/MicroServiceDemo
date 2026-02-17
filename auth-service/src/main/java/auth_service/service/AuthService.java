@@ -30,8 +30,15 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // 1. Update this method
     public String generateToken(String username, String tenantId) {
-        return jwtService.generateToken(username, tenantId);
+
+        // 2. Fetch User to get the Role
+        UserCredential user = repository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 3. Pass the role (e.g., "ROLE_ADMIN") to the token generator
+        return jwtService.generateToken(username, tenantId, user.getRoleName());
     }
 
     public String saveUser(UserCredential user) {
