@@ -5,6 +5,7 @@ import auth_service.entity.UserCredential;
 import auth_service.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -19,6 +20,12 @@ public class AuthController {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @GetMapping("/admin/dashboard")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')") // <--- Only allows Admins
+    public String adminDashboard() {
+        return "Welcome Admin! You have authorized access to this secure endpoint.";
+    }
 
     @PostMapping("/register")
     public String addNewUser(@RequestBody UserCredential user) {

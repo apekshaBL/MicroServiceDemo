@@ -3,6 +3,7 @@ package auth_service.config;
 //
 import auth_service.entity.UserCredential;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
@@ -10,13 +11,15 @@ import java.util.List;
 public class CustomUserDetails implements UserDetails {
     private String username;
     private String password;
+    private String role;
 
     public CustomUserDetails(UserCredential userCredential) {
         this.username = userCredential.getUsername();
         this.password = userCredential.getPassword();
+        this.role = userCredential.getRoleName();
     }
 
-    @Override public Collection<? extends GrantedAuthority> getAuthorities() { return List.of(); }
+    @Override public Collection<? extends GrantedAuthority> getAuthorities() { return List.of(new SimpleGrantedAuthority(this.role)); }
     @Override public String getPassword() { return password; }
     @Override public String getUsername() { return username; }
     @Override public boolean isAccountNonExpired() { return true; }
