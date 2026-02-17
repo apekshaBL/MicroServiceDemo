@@ -9,7 +9,7 @@ import lombok.AllArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "users") // Removed hardcoded schema to allow multi-tenancy
+@Table(name = "users")
 public class UserCredential {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,8 +17,19 @@ public class UserCredential {
 
     private String username;
 
-    @Column(name = "tenantid") // <--- This was looking for snake_case
+    @Column(name = "tenantid")
     private String tenantId;
+
+    public int getFailedAttempts() {
+        return failedAttempts;
+    }
+
+    public void setFailedAttempts(int failedAttempts) {
+        this.failedAttempts = failedAttempts;
+    }
+
+    @Column(name = "failed_attempts")
+    private int failedAttempts = 0;
 
     public String getTenantId() {
         return tenantId;

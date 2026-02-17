@@ -23,7 +23,7 @@ public class JwtService {
                 .parseSignedClaims(token);
     }
 
-    public String generateToken(String userName, String tenantId) {
+    public String generateToken(String userName, String tenantId, String roleName) {
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("tenantId", tenantId);
