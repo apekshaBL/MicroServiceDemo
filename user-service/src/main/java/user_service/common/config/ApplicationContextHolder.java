@@ -1,21 +1,21 @@
-package user_service.common.config;
+    package user_service.common.config;
 
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.stereotype.Component;
+    import org.springframework.beans.BeansException;
+    import org.springframework.context.ApplicationContext;
+    import org.springframework.context.ApplicationContextAware;
+    import org.springframework.stereotype.Component;
 
 
-@Component
-public class ApplicationContextHolder implements ApplicationContextAware {
-    private static ApplicationContext context;
+    @Component
+    public class ApplicationContextHolder implements ApplicationContextAware {
+        private static ApplicationContext context;
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        context = applicationContext; // This line is likely missing or not being called
+        @Override
+        public void setApplicationContext(ApplicationContext applicationContext) {
+            context = applicationContext; // This line is likely missing or not being called
+        }
+
+        public static <T> T getBean(Class<T> beanClass) {
+            return context.getBean(beanClass);
+        }
     }
-
-    public static <T> T getBean(Class<T> beanClass) {
-        return context.getBean(beanClass);
-    }
-}
