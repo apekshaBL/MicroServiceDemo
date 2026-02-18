@@ -1,7 +1,5 @@
 package notification_service.dto;
 
-
-
 //this is dto
 public class EmailRequest {
     private String to;

@@ -30,22 +30,31 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // 1. Update this method
+    // --- MERGED METHOD START ---
     public String generateToken(String username, String tenantId) {
-
-        // 2. Fetch User to get the Role
         UserCredential user = repository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 3. Pass the role (e.g., "ROLE_ADMIN") to the token generator
+        // 1. YOUR LOGIC: Security Check
+        if (!user.isActive()) {
+            throw new RuntimeException("Account is Locked. Contact Admin.");
+        }
+
+        // 2. YOUR LOGIC: Reset Counter on Success
+        if (user.getFailedAttempts() > 0) {
+            user.setFailedAttempts(0);
+            repository.save(user); // Reset to 0
+        }
+
+        // 3. HER LOGIC: Pass Role to JWT
         return jwtService.generateToken(username, tenantId, user.getRoleName());
     }
+    // --- MERGED METHOD END ---
 
     public String saveUser(UserCredential user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         repository.save(user);
 
-        // --- EMAIL TRIGGER ---
         try {
             EmailRequest email = new EmailRequest();
             email.setTo(user.getEmail());
@@ -151,18 +160,25 @@ public class AuthService {
         UserCredential user = repository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        int failedAttempts = 5;
+        if (!user.isActive()) {
+            return;
+        }
 
-        if (failedAttempts >= 5) {
-            user.setActive(false); // Lock the account
-            repository.save(user);
+        int newFailCount = user.getFailedAttempts() + 1;
+        user.setFailedAttempts(newFailCount);
 
-            // --- TRIGGER LOCK NOTIFICATION ---
+        System.out.println("DEBUG: Failed attempts for " + email + " is now: " + newFailCount);
+
+
+        if (newFailCount >= 5) {
+            user.setActive(false);
+
+
             try {
                 EmailRequest emailReq = new EmailRequest();
                 emailReq.setTo(user.getEmail());
                 emailReq.setSubject("🚨 Security Alert: Account Locked");
-                emailReq.setBody("Hello " + user.getUsername() + ",\n\nYour account has been locked due to 5 failed login attempts.\n\nIf this was you, contact support.");
+                emailReq.setBody("Hello " + user.getUsername() + ",\n\nYour account has been locked due to 5 failed login attempts.\n\nPlease contact support to unlock it.");
                 emailReq.setTenantId(user.getTenantId());
 
                 notificationClient.sendEmail(emailReq);
@@ -170,7 +186,10 @@ public class AuthService {
                 System.err.println("⚠️ Notification Service Down");
             }
         }
-    } // <--- !!! THIS WAS MISSING !!!
+
+        // Save changes to DB
+        repository.save(user);
+    }
 
     public void generateAndSendOTP(String email) {
         UserCredential user = repository.findByEmail(email)
