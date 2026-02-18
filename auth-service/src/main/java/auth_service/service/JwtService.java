@@ -25,11 +25,11 @@ public class JwtService {
     public String generateToken(String userName, String tenantId, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("tenantId", tenantId);
-        claims.put("role", role); // Add role to claims
+        claims.put("role", role);
 
         return createToken(claims, userName);
     }
-    // --- MERGED METHOD END ---
+
 
     private String createToken(Map<String, Object> claims, String userName) {
         return Jwts.builder()

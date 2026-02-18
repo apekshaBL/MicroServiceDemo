@@ -8,5 +8,8 @@
     <include file="changes/01-create-users-table.sql"
              relativeToChangelogFile="true"/>
     <include file="db/changelog/changes/03-add-failed-attempts.sql" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes/04-create-refresh-token.sql" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes//05-create-blacklist.sql" relativeToChangelogFile="false"/>
+    <include file="db/changelog/changes//06-add-otp-expiry.sql" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>
