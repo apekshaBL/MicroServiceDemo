@@ -18,7 +18,21 @@ public class UserCredential {
     private int id;
 
     private String username;
+    // Add this inside your UserCredential class
+    @Column(name = "auth_provider")
+    private String authProvider = "LOCAL"; // Default for normal users
 
+<<<<<<< HEAD
+=======
+    public String getAuthProvider() {
+        return authProvider;
+    }
+
+    public void setAuthProvider(String authProvider) {
+        this.authProvider = authProvider;
+    }
+
+>>>>>>> d09f44e (feat: multitenancy and security updates without secrets)
     public LocalDateTime getOtpExpiry() {
         return otpExpiry;
     }
