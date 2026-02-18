@@ -24,6 +24,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class AuthConfig {
     @Autowired
     private JwtAuthFilter jwtAuthFilter;
+    @Autowired
+    private auth_service.repository.TokenBlacklistRepository blacklistRepository;
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -34,9 +36,10 @@ public class AuthConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/token", "/auth/validate",
+                        .requestMatchers("/auth/register", "/auth/token", "/auth/refresh","/auth/validate",
                                 "/auth/forgot-password", "/auth/reset-password",
-                                "/auth/send-otp", "/auth/simulate-hack").permitAll()
+                                "/auth/send-otp","/auth/verify-otp","/auth/simulate-hack").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter,

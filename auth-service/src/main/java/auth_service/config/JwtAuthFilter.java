@@ -1,5 +1,5 @@
 package auth_service.config;
-
+import auth_service.common.context.TenantContext;
 import auth_service.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -24,6 +24,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private auth_service.repository.TokenBlacklistRepository blacklistRepository;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -32,29 +35,63 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
+        // 1. Check if Header is valid first (Safety Check)
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-
             String token = authHeader.substring(7);
 
-            Claims claims = Jwts.parser()
-                    .verifyWith(jwtService.getSignKey()) // make getSignKey public
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+            // 2. BLACKLIST CHECK (New Code) - Must happen before parsing
+            if (blacklistRepository.existsByToken(token)) {
+                System.out.println(" BLOCKED: Token is blacklisted/logged out.");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return; // Stop processing immediately. Do NOT continue the chain.
+            }
 
-            String username = claims.getSubject();
-            String role = claims.get("role", String.class);
+            try {
+                // 3. Parse Token
+                Claims claims = Jwts.parser()
+                        .verifyWith(jwtService.getSignKey())
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload();
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            username,
-                            null,
-                            List.of(new SimpleGrantedAuthority(role))
-                    );
+                String username = claims.getSubject();
+                String role = claims.get("role", String.class);
+                String tenantId = claims.get("tenantId", String.class); // Extract Tenant
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                // 4. Debug Logs
+                System.out.println(" FILTER DEBUG: User=" + username + ", Role=" + role + ", Tenant=" + tenantId);
+
+                // 5. Validate Role & Set Security Context
+                if (username != null && role != null) {
+
+                    // Set Tenant Context for DB operations
+                    if (tenantId != null) {
+                        TenantContext.setCurrentTenant(tenantId);
+                    }
+
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    username,
+                                    null,
+                                    List.of(new SimpleGrantedAuthority(role))
+                            );
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    System.err.println(" FILTER ERROR: Role is NULL. Check Token Generation.");
+                }
+
+            } catch (Exception e) {
+                System.err.println(" FILTER EXCEPTION: " + e.getMessage());
+                // Don't throw, just let the chain continue (Authentication will remain null -> 403)
+            }
         }
 
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            // 6. Cleanup Tenant Context (Important!)
+            TenantContext.clear();
+        }
     }
 }

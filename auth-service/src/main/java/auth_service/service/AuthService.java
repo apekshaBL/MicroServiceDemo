@@ -199,6 +199,8 @@ public class AuthService {
         int otpCode = 100000 + random.nextInt(900000);
 
         user.setResetToken(String.valueOf(otpCode));
+        user.setOtpExpiry(java.time.LocalDateTime.now().plusMinutes(5));
+
         repository.save(user);
 
         System.out.println("DEBUG OTP: " + otpCode);
@@ -214,5 +216,24 @@ public class AuthService {
         } catch (Exception e) {
             System.err.println("⚠️ Notification Service Down: " + e.getMessage());
         }
+    }
+
+    public String verifyOtp(String email, String otp) {
+        UserCredential user = repository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getResetToken() == null || !user.getResetToken().equals(otp)) {
+            throw new RuntimeException("Invalid OTP");
+        }
+
+        if (user.getOtpExpiry() == null || user.getOtpExpiry().isBefore(java.time.LocalDateTime.now())) {
+            throw new RuntimeException("OTP has expired");
+        }
+
+        user.setResetToken(null);
+        user.setOtpExpiry(null);
+        repository.save(user);
+
+        return jwtService.generateToken(user.getUsername(), user.getTenantId(), user.getRoleName());
     }
 }

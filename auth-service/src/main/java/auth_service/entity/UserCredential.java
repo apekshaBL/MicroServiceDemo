@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -16,6 +18,17 @@ public class UserCredential {
     private int id;
 
     private String username;
+
+    public LocalDateTime getOtpExpiry() {
+        return otpExpiry;
+    }
+
+    public void setOtpExpiry(LocalDateTime otpExpiry) {
+        this.otpExpiry = otpExpiry;
+    }
+
+    @Column(name = "otp_expiry")
+    private LocalDateTime otpExpiry;
 
     @Column(name = "tenantid")
     private String tenantId;

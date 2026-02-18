@@ -1,8 +1,13 @@
 package auth_service.controller;
 import auth_service.common.context.TenantContext;
 import auth_service.dto.AuthRequest;
+import auth_service.dto.JwtResponse;
+import auth_service.dto.RefreshTokenRequest;
+import auth_service.entity.RefreshToken;
 import auth_service.entity.UserCredential;
 import auth_service.service.AuthService;
+import auth_service.service.JwtService;
+import auth_service.service.RefreshTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +25,15 @@ public class AuthController {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private auth_service.service.LogoutService logoutService;
 
     @GetMapping("/admin/dashboard")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')") // <--- Only allows Admins
@@ -40,11 +54,20 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/token")
-    public String getToken(@RequestBody AuthRequest authRequest) {
-        String tenant = (authRequest.getTenantId() != null) ? authRequest.getTenantId() : "public";
+    @PostMapping("/logout")
+    public String logout(@RequestHeader("Authorization") String token, @RequestParam String username) {
+        // Remove "Bearer " prefix
+        String accessToken = token.substring(7);
 
-        // This tells Hibernate to look in the specific schema
+        // Call service to blacklist token & delete refresh token
+        logoutService.logout(accessToken, username);
+
+        return "Logged out successfully";
+    }
+
+    @PostMapping("/token")
+    public JwtResponse getToken(@RequestBody AuthRequest authRequest) {
+        String tenant = (authRequest.getTenantId() != null) ? authRequest.getTenantId() : "public";
         TenantContext.setCurrentTenant(tenant);
 
         try {
@@ -53,12 +76,40 @@ public class AuthController {
             );
 
             if (authenticate.isAuthenticated()) {
-                return service.generateToken(authRequest.getUsername(), tenant);
+                // 1. Generate Access Token
+                String accessToken = service.generateToken(authRequest.getUsername(), tenant);
+
+                // 2. Generate Refresh Token
+                RefreshToken refreshToken = refreshTokenService.createRefreshToken(authRequest.getUsername());
+
+                // 3. Return Both
+                return JwtResponse.builder()
+                        .accessToken(accessToken)
+                        .refreshToken(refreshToken.getToken())
+                        .build();
             } else {
                 throw new RuntimeException("Invalid Access");
             }
         } finally {
-            // Cleanup to prevent memory leaks
+            TenantContext.clear();
+        }
+    }
+
+    @PostMapping("/refresh")
+    public JwtResponse refreshToken(@RequestBody RefreshTokenRequest refreshRequest, @RequestParam String tenantId) {
+        TenantContext.setCurrentTenant(tenantId);
+        try {
+            return refreshTokenService.findByToken(refreshRequest.getToken())
+                    .map(refreshTokenService::verifyExpiration)
+                    .map(RefreshToken::getUser)
+                    .map(user -> {
+                        String accessToken = jwtService.generateToken(user.getUsername(), tenantId, user.getRoleName());
+                        return JwtResponse.builder()
+                                .accessToken(accessToken)
+                                .refreshToken(refreshRequest.getToken())
+                                .build();
+                    }).orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
+        } finally {
             TenantContext.clear();
         }
     }
@@ -99,7 +150,7 @@ public class AuthController {
 
     @PostMapping("/send-otp")
     public String sendOtp(@RequestParam String email, @RequestParam String tenantId) {
-        // !!! YOU MUST HAVE THESE LINES !!!
+
         TenantContext.setCurrentTenant(tenantId);
         System.out.println("DEBUG: Received Request -> Email: " + email + ", Tenant: " + tenantId);
 
@@ -119,6 +170,25 @@ public class AuthController {
         try {
             service.loginFailed(email);
             return "Account locked and owner notified";
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @PostMapping("/verify-otp")
+    public JwtResponse verifyOtp(@RequestBody auth_service.dto.OtpVerificationRequest request) {
+        String tenant = (request.getTenantId() != null) ? request.getTenantId() : "public";
+        TenantContext.setCurrentTenant(tenant);
+
+        try {
+            // This returns the Access Token
+            String accessToken = service.verifyOtp(request.getEmail(), request.getOtp());
+
+            // Return standard JWT Response
+            return JwtResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(null) // Optional: Generate a refresh token here if you want
+                    .build();
         } finally {
             TenantContext.clear();
         }
