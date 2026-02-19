@@ -1,21 +1,11 @@
 package auth_service.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 @Entity
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 @Table(name = "token_blacklist")
 public class TokenBlacklist {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -25,4 +15,33 @@ public class TokenBlacklist {
 
     @Column(name = "expiry_date", nullable = false)
     private LocalDateTime expiryDate;
+
+    public TokenBlacklist() {}
+
+    public TokenBlacklist(String token, LocalDateTime expiryDate) {
+        this.token = token;
+        this.expiryDate = expiryDate;
+    }
+
+    // Manual Builder
+    public static TokenBlacklistBuilder builder() {
+        return new TokenBlacklistBuilder();
+    }
+
+    public static class TokenBlacklistBuilder {
+        private String token;
+        private LocalDateTime expiryDate;
+
+        public TokenBlacklistBuilder token(String token) {
+            this.token = token;
+            return this;
+        }
+        public TokenBlacklistBuilder expiryDate(LocalDateTime expiryDate) {
+            this.expiryDate = expiryDate;
+            return this;
+        }
+        public TokenBlacklist build() {
+            return new TokenBlacklist(token, expiryDate);
+        }
+    }
 }
