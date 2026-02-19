@@ -35,6 +35,9 @@ public class AuthController {
     @Autowired
     private auth_service.service.LogoutService logoutService;
 
+    @Autowired
+    private auth_service.repository.UserCredentialRepository userRepository;
+
     @GetMapping("/admin/dashboard")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')") // <--- Only allows Admins
     public String adminDashboard() {
@@ -43,7 +46,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public String addNewUser(@RequestBody UserCredential user) {
-        // Default to 'public' if no tenant provided
+
         String tenant = (user.getTenantId() != null) ? user.getTenantId() : "public";
 
         TenantContext.setCurrentTenant(tenant);
@@ -56,10 +59,9 @@ public class AuthController {
 
     @PostMapping("/logout")
     public String logout(@RequestHeader("Authorization") String token, @RequestParam String username) {
-        // Remove "Bearer " prefix
+
         String accessToken = token.substring(7);
 
-        // Call service to blacklist token & delete refresh token
         logoutService.logout(accessToken, username);
 
         return "Logged out successfully";
@@ -76,13 +78,11 @@ public class AuthController {
             );
 
             if (authenticate.isAuthenticated()) {
-                // 1. Generate Access Token
+
                 String accessToken = service.generateToken(authRequest.getUsername(), tenant);
 
-                // 2. Generate Refresh Token
                 RefreshToken refreshToken = refreshTokenService.createRefreshToken(authRequest.getUsername());
 
-                // 3. Return Both
                 return JwtResponse.builder()
                         .accessToken(accessToken)
                         .refreshToken(refreshToken.getToken())
@@ -181,13 +181,18 @@ public class AuthController {
         TenantContext.setCurrentTenant(tenant);
 
         try {
-            // This returns the Access Token
+
             String accessToken = service.verifyOtp(request.getEmail(), request.getOtp());
 
-            // Return standard JWT Response
+            UserCredential user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new RuntimeException("User found during OTP check but not found now? This shouldn't happen."));
+
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
+
+
             return JwtResponse.builder()
                     .accessToken(accessToken)
-                    .refreshToken(null) // Optional: Generate a refresh token here if you want
+                    .refreshToken(refreshToken.getToken())
                     .build();
         } finally {
             TenantContext.clear();
