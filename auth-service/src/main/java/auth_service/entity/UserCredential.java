@@ -1,5 +1,5 @@
 package auth_service.entity;
-//
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,17 +13,46 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Table(name = "users")
 public class UserCredential {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Column(nullable = false) // Removed unique=true here if username isn't unique across tenants, but usually it is.
     private String username;
-    // Add this inside your UserCredential class
-    @Column(name = "auth_provider")
-    private String authProvider = "LOCAL"; // Default for normal users
 
-<<<<<<< HEAD
-=======
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    @Column(name="password")
+    private String password; // BCrypt hashed
+
+    @Column(name="role_name")
+    private String roleName = "ROLE_USER";
+
+    @Column(name="is_active")
+    private boolean isActive = true;
+
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "tenantid")
+    private String tenantId;
+
+    @Column(name = "otp_expiry")
+    private LocalDateTime otpExpiry;
+
+    @Column(name = "failed_attempts")
+    private int failedAttempts = 0;
+
+    // --- NEW FIELD FOR OAUTH2 ---
+    @Column(name = "auth_provider")
+    private String authProvider = "LOCAL"; // Default is LOCAL. Google login will set this to 'GOOGLE'
+
+    // --- Getters and Setters ---
+    // (Note: @Data generates these automatically, so these are technically redundant,
+    // but I am keeping them since you had them manually defined)
+
     public String getAuthProvider() {
         return authProvider;
     }
@@ -32,72 +61,12 @@ public class UserCredential {
         this.authProvider = authProvider;
     }
 
->>>>>>> d09f44e (feat: multitenancy and security updates without secrets)
-    public LocalDateTime getOtpExpiry() {
-        return otpExpiry;
-    }
-
-    public void setOtpExpiry(LocalDateTime otpExpiry) {
-        this.otpExpiry = otpExpiry;
-    }
-
-    @Column(name = "otp_expiry")
-    private LocalDateTime otpExpiry;
-
-    @Column(name = "tenantid")
-    private String tenantId;
-
-    public int getFailedAttempts() {
-        return failedAttempts;
-    }
-
-    public void setFailedAttempts(int failedAttempts) {
-        this.failedAttempts = failedAttempts;
-    }
-
-    @Column(name = "failed_attempts")
-    private int failedAttempts = 0;
-
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
-    }
-
-    @Column(unique = true, nullable = false)
-    private String email;
-
-    @Column(name="password")
-    private String password; // BCrypt hashed
-
-
-    @Column(name="role_name")
-    private String roleName = "ROLE_USER";
-
-
-    @Column(name="is_active")
-    private boolean isActive = true;
-
-
-    @Column(name = "reset_token")
-    private String resetToken;
-
     public int getId() {
         return id;
     }
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public String getResetToken() {
-        return resetToken;
-    }
-
-    public void setResetToken(String resetToken) {
-        this.resetToken = resetToken;
     }
 
     public String getUsername() {
@@ -138,5 +107,37 @@ public class UserCredential {
 
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+    public String getResetToken() {
+        return resetToken;
+    }
+
+    public void setResetToken(String resetToken) {
+        this.resetToken = resetToken;
+    }
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    public LocalDateTime getOtpExpiry() {
+        return otpExpiry;
+    }
+
+    public void setOtpExpiry(LocalDateTime otpExpiry) {
+        this.otpExpiry = otpExpiry;
+    }
+
+    public int getFailedAttempts() {
+        return failedAttempts;
+    }
+
+    public void setFailedAttempts(int failedAttempts) {
+        this.failedAttempts = failedAttempts;
     }
 }
