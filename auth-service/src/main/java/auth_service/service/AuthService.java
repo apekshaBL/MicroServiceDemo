@@ -1,6 +1,8 @@
 package auth_service.service;
 import auth_service.dto.EmailRequest;
+import auth_service.entity.PasswordHistory;
 import auth_service.entity.UserCredential;
+import auth_service.repository.PasswordHistoryRepository;
 import auth_service.repository.UserCredentialRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,8 +10,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +28,9 @@ public class AuthService {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private PasswordHistoryRepository passwordHistoryRepository;
 
     public AuthService(UserCredentialRepository repository, PasswordEncoder passwordEncoder) {
         this.repository = repository;
@@ -236,4 +243,45 @@ public class AuthService {
 
         return jwtService.generateToken(user.getUsername(), user.getTenantId(), user.getRoleName());
     }
+
+
+
+    public void changePassword(String username, String oldPassword, String newPassword) {
+        // 1. Get the user
+        UserCredential user = repository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 2. Validate Old Password (Does it match what is in DB?)
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new RuntimeException("Incorrect old password!");
+        }
+
+        // 3. Validate New Password Strength (Regex)
+        // Rule: Min 8 chars, 1 Upper, 1 Lower, 1 Number, 1 Special Char
+        String passwordPattern = "^(?=.[0-9])(?=.[a-z])(?=.[A-Z])(?=.[@#$%^&+=])(?=\\S+$).{8,}$";
+        if (!Pattern.matches(passwordPattern, newPassword)) {
+            throw new RuntimeException("Password must be strong: 8+ chars, 1 Uppercase, 1 Number, 1 Special Char");
+        }
+
+        // 4. Check History (Prevent reusing last 3)
+        List<PasswordHistory> history = passwordHistoryRepository.findTop3ByUserOrderByChangedAtDesc(user);
+        for (PasswordHistory old : history) {
+            if (passwordEncoder.matches(newPassword, old.getPassword())) {
+                throw new RuntimeException("You cannot reuse one of your last 3 passwords.");
+            }
+        }
+
+        // 5. Save CURRENT password to History (Before overwriting it)
+        PasswordHistory newHistory = PasswordHistory.builder()
+                .user(user)
+                .password(user.getPassword()) // Save the OLD hash
+                .changedAt(LocalDateTime.now())
+                .build();
+        passwordHistoryRepository.save(newHistory);
+
+        // 6. Update User Password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        repository.save(user);
+    }
 }
+

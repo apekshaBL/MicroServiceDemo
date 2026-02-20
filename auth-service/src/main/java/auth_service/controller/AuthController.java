@@ -1,6 +1,7 @@
 package auth_service.controller;
 import auth_service.common.context.TenantContext;
 import auth_service.dto.AuthRequest;
+import auth_service.dto.ChangePasswordRequest;
 import auth_service.dto.JwtResponse;
 import auth_service.dto.RefreshTokenRequest;
 import auth_service.entity.RefreshToken;
@@ -198,4 +199,26 @@ public class AuthController {
             TenantContext.clear();
         }
     }
+
+
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request,
+                                                 @RequestParam String tenantId) {
+
+        // 1. Set Tenant
+        TenantContext.setCurrentTenant(tenantId);
+
+        try {
+            // 2. Get the currently logged-in user from the SecurityContext (set by JwtAuthFilter)
+            String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+
+            // 3. Call Service
+            service.changePassword(username, request.getOldPassword(), request.getNewPassword());
+
+            return ResponseEntity.ok("Password changed successfully");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
 }
