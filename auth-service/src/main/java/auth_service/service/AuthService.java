@@ -272,11 +272,11 @@ public class AuthService {
         }
 
         // 5. Save CURRENT password to History (Before overwriting it)
-        PasswordHistory newHistory = PasswordHistory.builder()
-                .user(user)
-                .password(user.getPassword()) // Save the OLD hash
-                .changedAt(LocalDateTime.now())
-                .build();
+        PasswordHistory newHistory = new PasswordHistory(
+                user,
+                user.getPassword(), // Save the OLD hash
+                LocalDateTime.now()
+        );
         passwordHistoryRepository.save(newHistory);
 
         // 6. Update User Password

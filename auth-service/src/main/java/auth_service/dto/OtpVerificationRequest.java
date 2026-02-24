@@ -22,14 +22,6 @@ public class OtpVerificationRequest {
         this.otp = otp;
     }
 
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
-    }
-
     private String otp;
-    private String tenantId;
+
 }
