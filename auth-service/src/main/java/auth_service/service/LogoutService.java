@@ -1,20 +1,19 @@
 package auth_service.service;
 
-import auth_service.entity.TokenBlacklist;
 import auth_service.repository.RefreshTokenRepository;
-import auth_service.repository.TokenBlacklistRepository;
 import auth_service.repository.UserCredentialRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class LogoutService {
 
     @Autowired
-    private TokenBlacklistRepository blacklistRepository;
+    private StringRedisTemplate redisTemplate; // <--- This is your new Redis connection!
 
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
@@ -24,18 +23,14 @@ public class LogoutService {
 
     @Transactional
     public void logout(String accessToken, String username) {
-        // 1. Blacklist the Access Token (so it can't be used immediately)
-        TokenBlacklist blacklistEntry = TokenBlacklist.builder()
-                .token(accessToken)
-                .expiryDate(LocalDateTime.now().plusMinutes(30)) // Match your JWT expiry
-                .build();
-        blacklistRepository.save(blacklistEntry);
 
-        // 2. Delete the Refresh Token (so they can't get a NEW token)
+        redisTemplate.opsForValue().set("BLACKLIST:" + accessToken, "true", 30, TimeUnit.MINUTES);
+
+
         userRepository.findByUsername(username).ifPresent(refreshTokenRepository::deleteByUser);
     }
 
     public boolean isBlacklisted(String token) {
-        return blacklistRepository.existsByToken(token);
+        return Boolean.TRUE.equals(redisTemplate.hasKey("BLACKLIST:" + token));
     }
 }

@@ -25,7 +25,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private JwtService jwtService;
 
     @Autowired
-    private auth_service.repository.TokenBlacklistRepository blacklistRepository;
+    private auth_service.service.LogoutService logoutService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -40,10 +40,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
 
             // 2. BLACKLIST CHECK (New Code) - Must happen before parsing
-            if (blacklistRepository.existsByToken(token)) {
+            if (logoutService.isBlacklisted(token)) {
                 System.out.println(" BLOCKED: Token is blacklisted/logged out.");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return; // Stop processing immediately. Do NOT continue the chain.
+                return;
             }
 
             try {
@@ -61,7 +61,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 // 4. Debug Logs
                 System.out.println(" FILTER DEBUG: User=" + username + ", Role=" + role + ", Tenant=" + tenantId);
 
-                // 5. Validate Role & Set Security Context
+
                 if (username != null && role != null) {
 
                     // Set Tenant Context for DB operations
@@ -90,7 +90,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             filterChain.doFilter(request, response);
         } finally {
-            // 6. Cleanup Tenant Context (Important!)
+
             TenantContext.clear();
         }
     }
