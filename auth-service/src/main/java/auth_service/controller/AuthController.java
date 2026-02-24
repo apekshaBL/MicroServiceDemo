@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+    @Autowired
+    private auth_service.service.SessionManagementService sessionManagementService;
 
     @Autowired
     private AuthService service;
@@ -85,6 +87,10 @@ public class AuthController {
                 String accessToken = service.generateToken(authRequest.getUsername(), tenantId);
 
                 RefreshToken refreshToken = refreshTokenService.createRefreshToken(authRequest.getUsername());
+
+
+                // Register session and enforce 1-device limit
+                sessionManagementService.registerNewSession(authRequest.getUsername(), tenantId, accessToken);
 
                 return JwtResponse.builder()
                         .accessToken(accessToken)
