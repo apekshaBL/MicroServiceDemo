@@ -16,15 +16,6 @@ public class AuthRequest {
             message = "Password must be 8+ chars, with Upper, Lower, Number, and Special Char")
     private String password;
 
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
-    }
-
-    private String tenantId;
 
     public String getUsername() {
         return username;

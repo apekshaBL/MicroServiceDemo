@@ -1,6 +1,8 @@
 package auth_service.controller;
+
 import auth_service.common.context.TenantContext;
 import auth_service.dto.AuthRequest;
+import auth_service.dto.ChangePasswordRequest;
 import auth_service.dto.JwtResponse;
 import auth_service.dto.RefreshTokenRequest;
 import auth_service.entity.RefreshToken;
@@ -45,11 +47,11 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String addNewUser(@RequestBody UserCredential user) {
+    public String addNewUser(@RequestBody UserCredential user,
+                             @RequestHeader(value = "X-Tenant-ID", defaultValue = "public") String tenantId) {
 
-        String tenant = (user.getTenantId() != null) ? user.getTenantId() : "public";
-
-        TenantContext.setCurrentTenant(tenant);
+        user.setTenantId(tenantId); // Ensure the entity gets the tenant from the header
+        TenantContext.setCurrentTenant(tenantId);
         try {
             return service.saveUser(user);
         } finally {
@@ -68,9 +70,10 @@ public class AuthController {
     }
 
     @PostMapping("/token")
-    public JwtResponse getToken(@RequestBody AuthRequest authRequest) {
-        String tenant = (authRequest.getTenantId() != null) ? authRequest.getTenantId() : "public";
-        TenantContext.setCurrentTenant(tenant);
+    public JwtResponse getToken(@RequestBody AuthRequest authRequest,
+                                @RequestHeader(value = "X-Tenant-ID", defaultValue = "public") String tenantId) {
+
+        TenantContext.setCurrentTenant(tenantId);
 
         try {
             Authentication authenticate = authenticationManager.authenticate(
@@ -79,7 +82,7 @@ public class AuthController {
 
             if (authenticate.isAuthenticated()) {
 
-                String accessToken = service.generateToken(authRequest.getUsername(), tenant);
+                String accessToken = service.generateToken(authRequest.getUsername(), tenantId);
 
                 RefreshToken refreshToken = refreshTokenService.createRefreshToken(authRequest.getUsername());
 
@@ -96,7 +99,8 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public JwtResponse refreshToken(@RequestBody RefreshTokenRequest refreshRequest, @RequestParam String tenantId) {
+    public JwtResponse refreshToken(@RequestBody RefreshTokenRequest refreshRequest,
+                                    @RequestHeader(value = "X-Tenant-ID", defaultValue = "public") String tenantId) {
         TenantContext.setCurrentTenant(tenantId);
         try {
             return refreshTokenService.findByToken(refreshRequest.getToken())
@@ -123,7 +127,7 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestParam String email,
-                                                 @RequestParam String tenantId) {
+                                                 @RequestHeader(value = "X-Tenant-ID", defaultValue = "public") String tenantId) {
 
         TenantContext.setCurrentTenant(tenantId);
         try {
@@ -137,7 +141,7 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestParam String token,
                                                 @RequestBody String newPassword,
-                                                @RequestParam String tenantId) {
+                                                @RequestHeader(value = "X-Tenant-ID", defaultValue = "public") String tenantId) {
 
         TenantContext.setCurrentTenant(tenantId);
         try {
@@ -149,7 +153,8 @@ public class AuthController {
     }
 
     @PostMapping("/send-otp")
-    public String sendOtp(@RequestParam String email, @RequestParam String tenantId) {
+    public String sendOtp(@RequestParam String email,
+                          @RequestHeader(value = "X-Tenant-ID", defaultValue = "public") String tenantId) {
 
         TenantContext.setCurrentTenant(tenantId);
         System.out.println("DEBUG: Received Request -> Email: " + email + ", Tenant: " + tenantId);
@@ -164,7 +169,8 @@ public class AuthController {
     }
 
     @PostMapping("/simulate-hack")
-    public String simulateHack(@RequestParam String email, @RequestParam String tenantId) {
+    public String simulateHack(@RequestParam String email,
+                               @RequestHeader(value = "X-Tenant-ID", defaultValue = "public") String tenantId) {
 
         TenantContext.setCurrentTenant(tenantId);
         try {
@@ -176,9 +182,10 @@ public class AuthController {
     }
 
     @PostMapping("/verify-otp")
-    public JwtResponse verifyOtp(@RequestBody auth_service.dto.OtpVerificationRequest request) {
-        String tenant = (request.getTenantId() != null) ? request.getTenantId() : "public";
-        TenantContext.setCurrentTenant(tenant);
+    public JwtResponse verifyOtp(@RequestBody auth_service.dto.OtpVerificationRequest request,
+                                 @RequestHeader(value = "X-Tenant-ID", defaultValue = "public") String tenantId) {
+
+        TenantContext.setCurrentTenant(tenantId);
 
         try {
 
@@ -198,4 +205,26 @@ public class AuthController {
             TenantContext.clear();
         }
     }
+
+
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request,
+                                                 @RequestHeader(value = "X-Tenant-ID", defaultValue = "public") String tenantId) {
+
+        // 1. Set Tenant
+        TenantContext.setCurrentTenant(tenantId);
+
+        try {
+            // 2. Get the currently logged-in user from the SecurityContext (set by JwtAuthFilter)
+            String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+
+            // 3. Call Service
+            service.changePassword(username, request.getOldPassword(), request.getNewPassword());
+
+            return ResponseEntity.ok("Password changed successfully");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
 }
