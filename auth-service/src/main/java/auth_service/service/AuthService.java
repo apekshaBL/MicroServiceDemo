@@ -24,6 +24,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
+    private org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
+
+    @Autowired
     private NotificationClient notificationClient;
 
     @Autowired
@@ -205,10 +208,11 @@ public class AuthService {
         SecureRandom random = new SecureRandom();
         int otpCode = 100000 + random.nextInt(900000);
 
-        user.setResetToken(String.valueOf(otpCode));
-        user.setOtpExpiry(java.time.LocalDateTime.now().plusMinutes(5));
-
-        repository.save(user);
+        // --- NEW REDIS LOGIC ---
+        // Save OTP to Redis with a 5-minute TTL. No database updates needed!
+        String redisKey = "OTP:" + user.getTenantId() + ":" + email;
+        redisTemplate.opsForValue().set(redisKey, String.valueOf(otpCode), 5, java.util.concurrent.TimeUnit.MINUTES);
+        // -----------------------
 
         System.out.println("DEBUG OTP: " + otpCode);
 
@@ -229,18 +233,23 @@ public class AuthService {
         UserCredential user = repository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (user.getResetToken() == null || !user.getResetToken().equals(otp)) {
+        // --- NEW REDIS LOGIC ---
+        String redisKey = "OTP:" + user.getTenantId() + ":" + email;
+        String storedOtp = redisTemplate.opsForValue().get(redisKey); // Pull from high-speed memory
+
+        if (storedOtp == null) {
+            throw new RuntimeException("OTP has expired or does not exist");
+        }
+
+        if (!storedOtp.equals(otp)) {
             throw new RuntimeException("Invalid OTP");
         }
 
-        if (user.getOtpExpiry() == null || user.getOtpExpiry().isBefore(java.time.LocalDateTime.now())) {
-            throw new RuntimeException("OTP has expired");
-        }
 
-        user.setResetToken(null);
-        user.setOtpExpiry(null);
-        repository.save(user);
+        redisTemplate.delete(redisKey);
+        // -----------------------
 
+        // Generate the token and send it back
         return jwtService.generateToken(user.getUsername(), user.getTenantId(), user.getRoleName());
     }
 
