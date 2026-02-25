@@ -1,4 +1,21 @@
+
+# Compiled Java classes
+**/target/
+**.class
+
+# Log files
+*.log
+
+# IDE Settings
 .idea/
-target/
-*.class
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Environment Secrets (DO NOT PUSH)
 .env
+
+# Docker
+.docker/
