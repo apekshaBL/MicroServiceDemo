@@ -48,6 +48,8 @@ services:
       - consul-server
     environment:
       - DB_HOST=postgres-db
+      - DB_USERNAME=${DB_USERNAME:-postgres} # Add this
+      - DB_PASSWORD=${DB_PASSWORD:-password} # Add this
       - SPRING_CLOUD_CONSUL_HOST=consul-server
       - SPRING_CLOUD_CONSUL_PORT=8500
     ports:
@@ -61,6 +63,9 @@ services:
     environment:
       - SPRING_CLOUD_CONSUL_HOST=consul-server
       - SPRING_CLOUD_CONSUL_PORT=8500
+      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_QUERY_PASSING=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_REGISTER=true
     ports:
       - "8081:8081"
 
