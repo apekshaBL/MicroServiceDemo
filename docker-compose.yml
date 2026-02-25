@@ -1,0 +1,39 @@
+services:
+  postgres-db:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+
+  consul:
+    image: hashicorp/consul:1.15
+    container_name: consul-server
+    ports:
+      - "8500:8500"
+    command: "agent -dev -client=0.0.0.0"
+
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    depends_on:
+      - postgres-db
+      - consul
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_CLOUD_CONSUL_HOST: consul
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_CLOUD_CONSUL_HOST: consul
+    depends_on:
+      - consul
