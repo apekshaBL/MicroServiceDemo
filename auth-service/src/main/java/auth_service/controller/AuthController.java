@@ -49,14 +49,18 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String addNewUser(@RequestBody UserCredential user,
+    public String addNewUser(@RequestBody AuthRequest authRequest,
                              @RequestHeader(value = "X-Tenant-ID", defaultValue = "public") String tenantId) {
 
-        user.setTenantId(tenantId); // Ensure the entity gets the tenant from the header
+        // 1. Set the context so the DB knows which schema to use
         TenantContext.setCurrentTenant(tenantId);
+
         try {
-            return service.saveUser(user);
+            // 2. Pass the DTO (authRequest) to the service
+            // We also pass tenantId so the service can assign it to the Entity
+            return service.saveUser(authRequest, tenantId);
         } finally {
+            // 3. Always clear the context to prevent memory leaks or cross-tenant data leaks
             TenantContext.clear();
         }
     }

@@ -30,4 +30,3 @@ public class SessionManagementService {
         redisTemplate.opsForValue().set(sessionKey, newAccessToken, 30, TimeUnit.MINUTES);
     }
 }
-

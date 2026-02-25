@@ -1,3 +1,4 @@
+
 package auth_service.entity;
 
 import jakarta.persistence.*;

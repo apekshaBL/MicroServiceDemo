@@ -1,4 +1,5 @@
 package auth_service.service;
+import auth_service.dto.AuthRequest;
 import auth_service.dto.EmailRequest;
 import auth_service.entity.PasswordHistory;
 import auth_service.entity.UserCredential;
@@ -61,23 +62,34 @@ public class AuthService {
     }
     // --- MERGED METHOD END ---
 
-    public String saveUser(UserCredential user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+    public String saveUser(AuthRequest request, String tenantId) {
+        UserCredential user = new UserCredential();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setTenantId(tenantId);
+
+        // Check if role was provided in Postman, otherwise default to ROLE_USER
+        if (request.getRoleName() != null && !request.getRoleName().isEmpty()) {
+            user.setRoleName(request.getRoleName());
+        } else {
+            user.setRoleName("ROLE_USER");
+        }
+
         repository.save(user);
 
         try {
             EmailRequest email = new EmailRequest();
             email.setTo(user.getEmail());
-            email.setSubject("Welcome to " + user.getTenantId() + "!");
-            email.setBody("Hello " + user.getUsername() + ",\n\nYour account has been successfully created.\n\nTenant: " + user.getTenantId());
-            email.setTenantId(user.getTenantId());
-
+            email.setSubject("Welcome to " + tenantId + "!");
+            email.setBody("Hello " + user.getUsername() + ",\nYour account is ready.");
+            email.setTenantId(tenantId);
             notificationClient.sendEmail(email);
         } catch (Exception e) {
-            System.err.println(" Notification Service Down: " + e.getMessage());
+            System.err.println("Notification Service Down: " + e.getMessage());
         }
 
-        return "user added to the system";
+        return "User registered successfully as " + user.getRoleName();
     }
 
     public void validateToken(String token) {
@@ -293,4 +305,3 @@ public class AuthService {
         repository.save(user);
     }
 }
-

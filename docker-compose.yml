@@ -1,39 +1,76 @@
 services:
   postgres-db:
-    image: postgres:15
+    image: postgres:latest
     container_name: postgres-db
     environment:
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      - POSTGRES_USER=${DB_USERNAME:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-password}
+      - POSTGRES_DB=student_service_db
     ports:
       - "5432:5432"
 
-  consul:
-    image: hashicorp/consul:1.15
+  redis:
+    image: redis:alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+
+  consul-server:
+    image: hashicorp/consul:latest
     container_name: consul-server
     ports:
       - "8500:8500"
-    command: "agent -dev -client=0.0.0.0"
+    command: "agent -dev -client 0.0.0.0"
 
   auth-service:
     build: ./auth-service
     container_name: auth-service
     depends_on:
       - postgres-db
-      - consul
+      - redis
+      - consul-server
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${DB_NAME}
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SPRING_CLOUD_CONSUL_HOST: consul
+      - DB_HOST=postgres-db
+      - DB_PORT=5432
+      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - REDIS_HOST=redis
+      - SPRING_CLOUD_CONSUL_HOST=consul-server
+      - SPRING_CLOUD_CONSUL_PORT=8500
+    ports:
+      - "8089:8089"
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    depends_on:
+      - postgres-db
+      - consul-server
+    environment:
+      - DB_HOST=postgres-db
+      - SPRING_CLOUD_CONSUL_HOST=consul-server
+      - SPRING_CLOUD_CONSUL_PORT=8500
+    ports:
+      - "8087:8087"
 
   api-gateway:
     build: ./api-gateway
     container_name: api-gateway
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_CLOUD_CONSUL_HOST: consul
     depends_on:
-      - consul
+      - consul-server
+    environment:
+      - SPRING_CLOUD_CONSUL_HOST=consul-server
+      - SPRING_CLOUD_CONSUL_PORT=8500
+    ports:
+      - "8081:8081"
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    depends_on:
+      - consul-server
+    environment:
+      - SPRING_CLOUD_CONSUL_HOST=consul-server
+      - SPRING_CLOUD_CONSUL_PORT=8500
+    ports:
+      - "8091:8091"

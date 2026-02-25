@@ -1,5 +1,6 @@
 org/example/Main.class
+common/multitenancy/TenantFilter.class
+LoggingAspect/LoggingAspect.class
 common/multitenancy/TenantIdentifierResolver.class
 common/multitenancy/TenantContext.class
 common/multitenancy/SchemaMultiTenantConnectionProvider.class
-common/multitenancy/TenantFilter.class
