@@ -9,8 +9,8 @@
         <outputRelativeToContentRoot value="true" />
         <module name="api-gateway" />
         <module name="auth-service" />
-        <module name="common-lib" />
         <module name="user-service" />
+        <module name="common-lib" />
         <module name="notification-service" />
       </profile>
     </annotationProcessing>
