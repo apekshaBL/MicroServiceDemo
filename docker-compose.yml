@@ -1,6 +1,6 @@
 services:
   postgres-db:
-    image: postgres:latest
+    image: postgres:15
     container_name: postgres-db
     environment:
       - POSTGRES_USER=${DB_USERNAME:-postgres}
@@ -16,7 +16,7 @@ services:
       - "6379:6379"
 
   consul-server:
-    image: hashicorp/consul:latest
+    image: hashicorp/consul:1.15
     container_name: consul-server
     ports:
       - "8500:8500"
@@ -48,8 +48,8 @@ services:
       - consul-server
     environment:
       - DB_HOST=postgres-db
-      - DB_USERNAME=${DB_USERNAME:-postgres} # Add this
-      - DB_PASSWORD=${DB_PASSWORD:-password} # Add this
+      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
       - SPRING_CLOUD_CONSUL_HOST=consul-server
       - SPRING_CLOUD_CONSUL_PORT=8500
     ports:
@@ -73,14 +73,16 @@ services:
     build: ./notification-service
     container_name: notification-service
     depends_on:
-    - postgres-db
-    - consul-server
+      - postgres-db
+      - consul-server
     environment:
-    - DB_HOST=postgres-db
-    - DB_PORT=5432       # Add this line
-    - DB_USERNAME=${DB_USERNAME:-postgres}
-    - DB_PASSWORD=${DB_PASSWORD:-password}
-    - SPRING_CLOUD_CONSUL_HOST=consul-server
-    - SPRING_CLOUD_CONSUL_PORT=8500
+      - DB_HOST=postgres-db
+      - DB_PORT=5432
+      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - SPRING_CLOUD_CONSUL_HOST=consul-server
+      - SPRING_CLOUD_CONSUL_PORT=8500
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
     ports:
-    - "8091:8091"
+      - "8091:8091"
