@@ -1,4 +1,4 @@
-package LoggingAspect;
+package logging;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -13,8 +13,14 @@ public class LoggingAspect {
 
     private static final Logger log = LoggerFactory.getLogger(LoggingAspect.class);
 
-    // This universal pointcut looks for ANY class inside a "controller" or "service" package across all your microservices!
-    @Around("(execution(* *..controller..*(..)) || execution(* *..service..*(..))) && !within(org.springframework..*)")
+    // This constructor will print a massive alert in your logs when the app starts.
+    // If you see this, you know 100% that Spring Boot found this file!
+    public LoggingAspect() {
+        System.out.println("🚨🚨🚨 INVISIBLE MANAGER (LOGGING ASPECT) IS AWAKE AND WATCHING! 🚨🚨🚨");
+    }
+
+    // BULLETPROOF POINTCUT: Watches EVERYTHING inside the "controller" and "service" folders
+    @Around("execution(* auth_service.controller..*(..)) || execution(* auth_service.service..*(..))")
     public Object logMethodExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
 
         String methodName = joinPoint.getSignature().toShortString();
