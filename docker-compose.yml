@@ -73,9 +73,14 @@ services:
     build: ./notification-service
     container_name: notification-service
     depends_on:
-      - consul-server
+    - postgres-db
+    - consul-server
     environment:
-      - SPRING_CLOUD_CONSUL_HOST=consul-server
-      - SPRING_CLOUD_CONSUL_PORT=8500
+    - DB_HOST=postgres-db
+    - DB_PORT=5432       # Add this line
+    - DB_USERNAME=${DB_USERNAME:-postgres}
+    - DB_PASSWORD=${DB_PASSWORD:-password}
+    - SPRING_CLOUD_CONSUL_HOST=consul-server
+    - SPRING_CLOUD_CONSUL_PORT=8500
     ports:
-      - "8091:8091"
+    - "8091:8091"
