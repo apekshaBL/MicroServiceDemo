@@ -9,9 +9,9 @@ The project follows a distributed architecture where each service handles a spec
 
 ### Core Services
 * **API Gateway (Port 8081):** Entry point. Performs JWT validation and injects `X-Tenant-ID` headers.
-* **Auth-Service (Port 8082):** Identity Provider. Manages User Registration, Login, and JWT issuance.
-* **User-Service (Port 8083):** Business Logic. Manages user profiles within isolated database schemas.
-* **Notification-Service (Port 8084):** Communication. Handles email alerts via asynchronous triggers.
+* **Auth-Service (Port 8089):** Identity Provider. Manages User Registration, Login, and JWT issuance.
+* **User-Service (Port 8087):** Business Logic. Manages user profiles within isolated database schemas.
+* **Notification-Service (Port 8091):** Communication. Handles email alerts via asynchronous triggers.
 * **Command-Lib:** Shared library containing Multi-tenancy configurations and `TenantContext` logic.
 
 ## 🛠️ Tech Stack
